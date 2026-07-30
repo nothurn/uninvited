@@ -113,6 +113,14 @@ configurations {
 }
 
 dependencies {
+    // hauntedcore is a MANDATORY dependency here (see mods.toml: mandatory=true, ordering="AFTER",
+    // side="CLIENT") - PhantomJoinClientEvents calls PresenceState/PresenceEndEvent directly with no
+    // ModList guard, unlike horrorchatmessages' genuinely-optional usage. Still compileOnly, not
+    // implementation/bundled: hauntedcore ships as its own separate mod jar (mods.toml's mandatory
+    // dependency declaration is what enforces it's present at runtime, not Gradle bundling). Resolved
+    // via the composite build in settings.gradle.
+    compileOnly "com.horrortricks.hauntedcore:hauntedcore:1.0.0"
+
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"
