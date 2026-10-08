@@ -2,6 +2,7 @@ package com.horrortricks.phantomjoin.client;
 
 import com.horrortricks.hauntedcore.presence.PresenceEndEvent;
 import com.horrortricks.hauntedcore.presence.PresenceState;
+import com.horrortricks.hauntedcore.client.HauntedCoreClientNetworking;
 import com.horrortricks.phantomjoin.PhantomJoinConfig;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -63,6 +64,7 @@ public final class PhantomJoinClientEvents {
    @SubscribeEvent
    public static void onPresenceEnd(PresenceEndEvent event) {
       if (pendingLeaveName != null) {
+         HauntedCoreClientNetworking.syncPresence(null);
          sendLeaveMessage(pendingLeaveName);
          pendingLeaveName = null;
          Minecraft minecraft = Minecraft.getInstance();
@@ -113,6 +115,7 @@ public final class PhantomJoinClientEvents {
       String currentPlayerName = minecraft.player != null ? minecraft.player.getGameProfile().getName() : null;
       PresenceState.begin(random, currentPlayerName);
       String name = PresenceState.getFakeName();
+      HauntedCoreClientNetworking.syncPresence(name);
       sendJoinMessage(name);
       pendingLeaveName = name;
    }
@@ -120,8 +123,13 @@ public final class PhantomJoinClientEvents {
    private static void scheduleNextJoin(RandomSource random) {
       int min = (Integer)PhantomJoinConfig.MIN_INTERVAL_TICKS.get();
       int max = Math.max(min, (Integer)PhantomJoinConfig.MAX_INTERVAL_TICKS.get());
-      int delay = min + random.nextInt(max - min + 1);
+      int delay = randomInclusive(random, min, max);
       nextJoinTick = tickCounter + delay;
+   }
+
+   private static int randomInclusive(RandomSource random, int min, int max) {
+      long range = (long)max - min + 1L;
+      return min + (int)Math.floorMod(random.nextLong(), range);
    }
 
    private static void trackDamage(LocalPlayer player) {
